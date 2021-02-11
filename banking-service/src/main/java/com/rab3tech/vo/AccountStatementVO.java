@@ -3,7 +3,7 @@ package com.rab3tech.vo;
 import java.sql.Timestamp;
 
 public class AccountStatementVO {
-	//trx id , account no ,  debit/credit , amount , date 
+	//trx id , account no ,  card/credit , amount , date 
 	private int transactionId;
 	private String accountNo;
 	private String transactionType;
