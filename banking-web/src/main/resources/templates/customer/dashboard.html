@@ -30,8 +30,25 @@
    
 </header>
 <div class="container">
-  <h2>Customer Dashboard Page
-  </h2>
+</br>
+   <a th:href="@{/customer/myProfile}"> 
+	<button type="button" class="btn btn-secondary">MyProfile</button>
+  </a>
+   <a th:href="@{/customer/managePayee}"> 
+	<button type="button" class="btn btn-secondary">Manage Payee</button>
+  </a>
+  <a th:href="@{/customer/transaction}"> 
+	<button type="button" class="btn btn-secondary">Transaction</button>
+  </a>
+  <a th:href="@{ /customer/accountStatement}"> 
+	<button type="button" class="btn btn-warning">Account Statement</button>
+  </a>
+  <a th:href="@{/customer/logout}"> 
+	<button type="button" class="btn btn-warning">Logout</button>
+  </a>
+ 
+  <h2>Customer Dashboard Page </h2>
+  
   <img th:src="@{/images/customer_dashboard.jpg}" alt="page"/>
    <span th:utext="${error}" style="color: red;font-size: 18px;"></span>
   <div style="width: 70%">

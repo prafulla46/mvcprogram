@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,6 +154,49 @@ public class EmailServiceImpl implements EmailService{
 			e.printStackTrace();
 		 }   
 	        return "done";
+	}
+
+
+	@Override
+	@Async("threadPool")
+	public String sendEditPayeeEMail(EmailVO email) {
+		 MimeMessage message = javaMailSender.createMimeMessage();
+		 try {
+			MimeMessageHelper helper = new MimeMessageHelper(message,
+			            MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+			            StandardCharsets.UTF_8.name());
+			Context context = new Context();
+	        Map<String,Object> props=new HashMap<>();
+	        props.put("name", email.getName());
+	        props.put("payeeName", email.getName());
+	        props.put("payeeAccount", email.getBody());
+	        props.put("sign", "Banking Application");
+	        props.put("location", "Fremont CA100 , USA");
+	        props.put("email", "cubicbatch.3@gmail.com");
+	        context.setVariables(props);
+	        String html = templateEngine.process("edit-payee-email-template", context);
+	        
+	        helper.setTo(email.getTo());
+	        helper.setText(html, true);
+	        helper.setSubject(email.getSubject());
+	        helper.setFrom(email.getFrom());
+	        
+	        File cfile=new ClassPathResource("images/cb1.png", EmailServiceImpl.class.getClassLoader()).getFile();
+	        byte[] cbytes=Files.readAllBytes(cfile.toPath());
+	        InputStreamSource cimageSource =new ByteArrayResource(cbytes);
+	        helper.addInline("cb", cimageSource, "image/png");
+	        
+	        File file=new ClassPathResource("images/bank-icon.png", EmailServiceImpl.class.getClassLoader()).getFile();
+	        byte[] bytes=Files.readAllBytes(file.toPath());
+	        InputStreamSource imageSource =new ByteArrayResource(bytes);
+	        helper.addInline("bankIcon", imageSource, "image/png");
+	        
+			javaMailSender.send(message);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "done";
 	}
 
 }

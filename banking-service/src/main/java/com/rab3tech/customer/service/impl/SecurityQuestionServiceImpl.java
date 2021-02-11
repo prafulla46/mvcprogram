@@ -80,5 +80,36 @@ public class SecurityQuestionServiceImpl implements SecurityQuestionService {
 			return questionsVO;
 		}).collect(Collectors.toList());*/
 	}
+
+
+	@Override
+	public CustomerSecurityQueAnsVO findQuestionAnswer(String emailId) {
+		List<CustomerQuestionAnswer> customerQuestionAnswers=customerQuestionsAnsRepository.findQuestionAnswer(emailId);
+		CustomerSecurityQueAnsVO questionAnsList = new CustomerSecurityQueAnsVO();
+		questionAnsList.setSecurityQuestion1(customerQuestionAnswers.get(0).getQuestion());
+		questionAnsList.setSecurityQuestion2(customerQuestionAnswers.get(1).getQuestion());
+		questionAnsList.setSecurityQuestionAnswer1(customerQuestionAnswers.get(0).getAnswer());
+		questionAnsList.setSecurityQuestionAnswer2(customerQuestionAnswers.get(1).getAnswer());
+		return questionAnsList;
+	}
+
+
+	@Override
+	public void update(CustomerSecurityQueAnsVO customerSecurityQueAnsVO) {
+		List<CustomerQuestionAnswer> customerQuestionAnswers=customerQuestionsAnsRepository.findQuestionAnswer(customerSecurityQueAnsVO.getLoginid());
+		String quetionText=questionsRepository.findById(Integer.parseInt(customerSecurityQueAnsVO.getSecurityQuestion1())).get().getQuestions();
+		CustomerQuestionAnswer questAns1 = customerQuestionAnswers.get(0);
+		questAns1.setAnswer(customerSecurityQueAnsVO.getSecurityQuestionAnswer1());
+		questAns1.setQuestion(quetionText);
+		questAns1.setDom(new Timestamp(new Date().getTime()));
+		customerQuestionsAnsRepository.save(questAns1);
+		
+		CustomerQuestionAnswer questAns2 = customerQuestionAnswers.get(1);
+		questAns2.setAnswer(customerSecurityQueAnsVO.getSecurityQuestionAnswer2());
+		quetionText=questionsRepository.findById(Integer.parseInt(customerSecurityQueAnsVO.getSecurityQuestion2())).get().getQuestions();
+		questAns1.setQuestion(quetionText);
+		questAns2.setDom(new Timestamp(new Date().getTime()));
+		customerQuestionsAnsRepository.save(questAns2);
+	}
 	
 }

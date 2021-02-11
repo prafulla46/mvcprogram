@@ -10,5 +10,8 @@ public interface SecurityQuestionService {
 	List<SecurityQuestionsVO> findAll();
 
 	void save(CustomerSecurityQueAnsVO customerSecurityQueAnsVO);
+	
+	void update(CustomerSecurityQueAnsVO customerSecurityQueAnsVO);
 
+	CustomerSecurityQueAnsVO findQuestionAnswer(String emailId);
 }

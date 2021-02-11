@@ -1,5 +1,7 @@
 package com.rab3tech.customer.ui.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.servlet.http.HttpSession;
@@ -14,17 +16,24 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.rab3tech.admin.service.CustomerAccountInfoService;
 import com.rab3tech.customer.service.CustomerService;
 import com.rab3tech.customer.service.LoginService;
+import com.rab3tech.customer.service.PayeeInfoService;
 import com.rab3tech.customer.service.impl.CustomerEnquiryService;
 import com.rab3tech.customer.service.impl.SecurityQuestionService;
 import com.rab3tech.email.service.EmailService;
+import com.rab3tech.vo.AccountStatementVO;
 import com.rab3tech.vo.ChangePasswordVO;
+import com.rab3tech.vo.CustomerAccountInfoVO;
 import com.rab3tech.vo.CustomerSavingVO;
 import com.rab3tech.vo.CustomerSecurityQueAnsVO;
 import com.rab3tech.vo.CustomerVO;
 import com.rab3tech.vo.EmailVO;
 import com.rab3tech.vo.LoginVO;
+import com.rab3tech.vo.PayeeInfoVO;
+import com.rab3tech.vo.SecurityQuestionsVO;
+import com.rab3tech.vo.TransactionVO;
 
 /**
  * 
@@ -52,7 +61,13 @@ public class CustomerUIController {
 	private EmailService emailService;
 	
 	@Autowired
-   private LoginService loginService;	
+   private LoginService loginService;
+	
+	@Autowired
+	private CustomerAccountInfoService customerAccountInfoService;
+	
+	@Autowired
+	PayeeInfoService payeeInfoService;
 	
 	@PostMapping("/customer/changePassword")
 	public String saveCustomerQuestions(@ModelAttribute ChangePasswordVO changePasswordVO, Model model,HttpSession session) {
@@ -156,5 +171,161 @@ public class CustomerUIController {
 		return "customer/success"; // customerEnquiry.html
 
 	}
+	@GetMapping("/customer/myProfile")
+	public String myProfilePage(Model model,HttpSession session) {
+		//check if user is logged in or not 
+		LoginVO  loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+		if(loginVO2 != null) {
+			String loginid=loginVO2.getUsername();
+			CustomerVO customer = customerService.getCustomer(loginid);
+			CustomerSecurityQueAnsVO quesAns = securityQuestionService.findQuestionAnswer(loginid);
+			customer.setQuestion1(quesAns.getSecurityQuestion1());
+			customer.setQuestion2(quesAns.getSecurityQuestion2());
+			customer.setAnswer1(quesAns.getSecurityQuestionAnswer1());
+			customer.setAnswer2(quesAns.getSecurityQuestionAnswer2());
+			model.addAttribute("customerVO", customer);
+			//find all the questions 
+			List<SecurityQuestionsVO> securityQuestionsVO = securityQuestionService.findAll();
+			//pass all the question to html 
+			model.addAttribute("securityQuestionsVO", securityQuestionsVO);
+			return "customer/myProfile"; //myProfile.html
+		}else {
+			//go to login page 
+			return "customer/login";
+			
+		}
+	}
+	
+	@PostMapping("customer/account/updateProfile")
+	public String updateMyProfile(@ModelAttribute CustomerVO customerVO, Model model,HttpSession session) {
+		LoginVO  loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+		if(loginVO2 != null) {
+			CustomerSecurityQueAnsVO customerSecurityQueAnsVO = new CustomerSecurityQueAnsVO();
+			customerSecurityQueAnsVO.setLoginid(loginVO2.getUsername());
+			customerSecurityQueAnsVO.setSecurityQuestion1(customerVO.getQuestion1());
+			customerSecurityQueAnsVO.setSecurityQuestion2(customerVO.getQuestion2());
+			customerSecurityQueAnsVO.setSecurityQuestionAnswer1(customerVO.getAnswer1());
+			customerSecurityQueAnsVO.setSecurityQuestionAnswer2(customerVO.getAnswer2());
+			customerService.updateProfile(customerVO);
+			
+			securityQuestionService.update(customerSecurityQueAnsVO);
+			model.addAttribute("message", "User has been updated sucessfully");
+			model.addAttribute("customerVO", customerVO);
+			//find all the questions 
+			List<SecurityQuestionsVO> securityQuestionsVO = securityQuestionService.findAll();
+			//pass all the question to html 
+			model.addAttribute("securityQuestionsVO", securityQuestionsVO);
+			return "customer/myProfile"; //myProfile.html
+		}else {
+			//go to login page 
+			return "customer/login";
+			
+		}
+	}
 
+	@GetMapping("/customer/addPayee")
+	public String addPayee(Model model,HttpSession session) {
+		//check if user is logged in or not 
+		LoginVO  loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+		if(loginVO2 != null) {
+			//check user has account or not 
+			CustomerAccountInfoVO customerAccountInfoVO = customerAccountInfoService.findCustomer(loginVO2.getUsername());
+			if(customerAccountInfoVO == null) {
+				model.addAttribute("message", "You do not have valid account please connect to bank for account creation ");
+			}
+			return "customer/addPayee";
+		}else {
+			//go to login page 
+			return "customer/login";
+		}
+	}
+	
+	@PostMapping("/customer/savePayee")
+	public String savePayee(@ModelAttribute PayeeInfoVO payeeInfo,Model model,HttpSession session) {
+		//check if user is logged in or not 
+				LoginVO  loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+				if(loginVO2 != null) {
+					payeeInfo.setCustomerId(loginVO2.getUsername());
+					String message = payeeInfoService.savePayee(payeeInfo);
+					model.addAttribute("message",message);
+					return "customer/addPayee";
+				}else {
+					//go to login page 
+					return "customer/login";
+				}
+	}
+	
+	@GetMapping("/customer/transaction")
+    public String transfer (Model model, HttpSession session) {
+        LoginVO loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+        if (loginVO2 !=null) {            
+            List <PayeeInfoVO> payeeInfoVOs=payeeInfoService.findByCustomerId(loginVO2.getUsername());
+            model.addAttribute("payeeInfoVOs", payeeInfoVOs);
+            return "customer/transferMoney";
+        }else {
+			//go to login page 
+			return "customer/login";
+		}
+	}
+	
+	@PostMapping("/customer/saveTransaction")
+	public String savePayee(@ModelAttribute TransactionVO transactionVo,Model model,HttpSession session) {
+		//check if user is logged in or not 
+				LoginVO  loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+				if(loginVO2 != null) {
+					transactionVo.setCustomerID(loginVO2.getUsername());
+					String message = customerAccountInfoService.saveTransaction(transactionVo);
+					model.addAttribute("message",message);
+					 List <PayeeInfoVO> payeeInfoVOs=payeeInfoService.findByCustomerId(loginVO2.getUsername());
+			            model.addAttribute("payeeInfoVOs", payeeInfoVOs);
+					return "customer/transferMoney";
+				}else {
+					//go to login page 
+					return "customer/login";
+				}
+	}
+	
+	@GetMapping("/customer/accountStatement")
+    public String accountStatement(Model model, HttpSession session) {
+        LoginVO loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+        if (loginVO2 !=null) {            
+        	List<AccountStatementVO> statements = customerAccountInfoService.getStatement(loginVO2.getUsername());
+        	System.out.println("Statement ====="+statements);
+        	model.addAttribute("AccountStatementVO", statements);
+            return "customer/accountStatement";
+        }else {
+			//go to login page 
+			return "customer/login";
+		}
+	}
+	
+	@GetMapping("/customer/managePayee")
+    public String managePayee(Model model, HttpSession session) {
+        LoginVO loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+        if (loginVO2 !=null) {            
+	        //check for user account
+	        List<PayeeInfoVO> payeeInfoVO = payeeInfoService.findByCustomerId(loginVO2.getUsername());
+	        model.addAttribute("payeeInfoVO", payeeInfoVO);
+	        return "/customer/managePayee";
+        }else {
+			//go to login page 
+			return "customer/login";
+		}
+	}
+	
+	@PostMapping("/customer/editPayeeInfo")
+	 public String editPayee(@ModelAttribute PayeeInfoVO payeeInfoVo, Model model, HttpSession session) {
+        LoginVO loginVO2=(LoginVO)session.getAttribute("userSessionVO");
+        if (loginVO2 !=null) {            
+	        //check for user account
+	        payeeInfoService.editPayee(payeeInfoVo);
+	        List<PayeeInfoVO> payeeInfoVO = payeeInfoService.findByCustomerId(loginVO2.getUsername());
+	        model.addAttribute("payeeInfoVO", payeeInfoVO);
+	        model.addAttribute("message", "Payee has been updated successfully");	        
+	        return "/customer/managePayee";
+        }else {
+			//go to login page 
+			return "customer/login";
+		}
+	}
 }

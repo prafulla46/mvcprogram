@@ -9,5 +9,6 @@ public interface EmailService {
 	String sendRegistrationEmail(EmailVO mail);
 
 	String sendUsernamePasswordEmail(EmailVO mail);
-
+	
+	String sendEditPayeeEMail(EmailVO email);
 }

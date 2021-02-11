@@ -6,4 +6,6 @@ public interface CustomerService {
 
 	CustomerVO createAccount(CustomerVO customerVO);
 
+	CustomerVO getCustomer(String email);
+	void updateProfile(CustomerVO customerVO);
 }

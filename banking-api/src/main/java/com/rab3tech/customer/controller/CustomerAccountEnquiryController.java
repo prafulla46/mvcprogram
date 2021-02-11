@@ -43,7 +43,7 @@ public class CustomerAccountEnquiryController {
 		List<CustomerSavingVO>  responses=customerEnquiryService.findAll();
 		return responses;
 	}
-	
+	//http://localhost:999/v3/customers/enquiry/pending
 	@GetMapping("/customers/enquiry/pending")
 	public List<CustomerSavingVO> getAllPendingEnquiry() {
 		List<CustomerSavingVO>  responses=customerEnquiryService.findPendingEnquiry();

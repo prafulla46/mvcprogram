@@ -1,6 +1,7 @@
 package com.rab3tech.customer.service.impl;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.BeanUtils;
@@ -58,6 +59,24 @@ public class CustomerServiceImpl implements  CustomerService{
 		customerVO.setId(dcustomer.getId());
 		customerVO.setUserid(customerVO.getUserid());
 		return customerVO;
+	}
+
+
+	@Override
+	public CustomerVO getCustomer(String email) {
+		Optional<Customer> customerEntity = customerRepository.findByEmail(email);
+		CustomerVO customerVO = new CustomerVO();
+		BeanUtils.copyProperties(customerEntity.get(), customerVO);
+		customerVO.setUserid(email);
+		return customerVO;
+	}
+
+
+	@Override
+	public void updateProfile(CustomerVO customerVO) {
+		Customer customer = new Customer();
+		BeanUtils.copyProperties(customerVO, customer);
+		customerRepository.save(customer);
 	}
 
 }
